@@ -45,7 +45,7 @@ clock = pygame.time.Clock()
 # Тут опишите все классы игры.
 class GameObject:
     def __init__(self, body_color = None):
-        self.position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
+        self.position = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.body_color = body_color
 
 
@@ -74,6 +74,7 @@ class Snake(GameObject):
     pass
     def __init__(self):
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.position = self.positions[0]
         self.length = 1
         self.direction = RIGHT
         self.next_direction = None
@@ -85,7 +86,7 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def move(self):
+    def move(self, apple):
         '''отвечает за обновление положения змейки в игре.'''
         head = self.get_head_position()
 
@@ -95,20 +96,22 @@ class Snake(GameObject):
         new_pos_head = (new_pos_head[0] % SCREEN_WIDTH, new_pos_head[1] % SCREEN_HEIGHT)
 
         if new_pos_head in self.positions[2:]:
-            reset()
+            self.reset()
         else:
-            # Обновление списка позиций
             self.positions.insert(0, new_pos_head)
             if len(self.positions) > self.length:
                 self.positions.pop()
+            if new_pos_head == apple.position:  # Проверяем, совпадает ли новая позиция с позицией яблока
+                self.length += 1  # Увеличиваем длину змейки на 1
+                apple.randomize_position()  # Генерируем новую позицию для яблока
+
+        
             
     def reset(self):
         self.length = 1
-        self.position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
+        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
         screen.fill(BOARD_BACKGROUND_COLOR)
-
-
 
             
     def draw(self):
@@ -141,7 +144,6 @@ def handle_keys(game_object):
                 game_object.next_direction = RIGHT
     
 
-
 def main():
     # Тут нужно создать экземпляры классов.
     apple = Apple()
@@ -152,20 +154,20 @@ def main():
     while True:
         clock.tick(SPEED)
 
-        # Тут опишите основную логику игры.
-        # ...
+        # Обработка событий клавиш
+        handle_keys(snake)  
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 break
         
-        #handle_keys()
         snake.update_direction()
-        snake.move()
+        snake.move(apple)  # Вот здесь должен быть вызов метода move()
+        screen.fill(BOARD_BACKGROUND_COLOR)
         snake.draw()
         apple.draw()
-        # apple.randomize_position()
-        # apple.draw()
+        pygame.display.update()
     
         pygame.display.update()
 
