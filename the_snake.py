@@ -44,34 +44,41 @@ clock = pygame.time.Clock()
 
 # Тут опишите все классы игры.
 class GameObject:
-    def __init__(self, body_color = None):
+    """Базовый класс"""
+
+    def __init__(self, body_color=None):
         self.position = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.body_color = body_color
 
-
     def draw(self):
+        """Метод draw"""
         pass
 
+
 class Apple(GameObject):
+    """Класс отвечающий за генерацию яблока"""
+
     def __init__(self):
-        #self.body_color = APPLE_COLOR
         super().__init__(body_color=APPLE_COLOR)
         self.randomize_position()
 
     def randomize_position(self):
+        """Метод для выбора рандомной позиции яблока"""
         self.position = (
-            randint(0, GRID_WIDTH) * GRID_SIZE,
-            randint(0, GRID_HEIGHT) * GRID_SIZE,
+            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+            randint(0, GRID_HEIGHT - 1) * GRID_SIZE,
         )
 
     def draw(self):
+        """Метод для отрисовки"""
         rect = (pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE)))
         pygame.draw.rect(screen, self.body_color, rect)
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Snake(GameObject):
-    pass
+    """Класс который отвечает за змейку"""
+
     def __init__(self):
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.position = self.positions[0]
@@ -82,18 +89,21 @@ class Snake(GameObject):
         self.last = None
 
     def update_direction(self):
+        """Обновление направления"""
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
 
     def move(self, apple):
-        '''отвечает за обновление положения змейки в игре.'''
+        """отвечает за обновление положения змейки в игре."""
         head = self.get_head_position()
 
         dx, dy = self.direction
         new_pos_head = (head[0] + dx * GRID_SIZE, head[1] + dy * GRID_SIZE)
-        
-        new_pos_head = (new_pos_head[0] % SCREEN_WIDTH, new_pos_head[1] % SCREEN_HEIGHT)
+
+        new_pos_head = (
+            new_pos_head[0] % SCREEN_WIDTH, new_pos_head[1] % SCREEN_HEIGHT
+        )
 
         if new_pos_head in self.positions[2:]:
             self.reset()
@@ -101,34 +111,32 @@ class Snake(GameObject):
             self.positions.insert(0, new_pos_head)
             if len(self.positions) > self.length:
                 self.positions.pop()
-            if new_pos_head == apple.position:  # Проверяем, совпадает ли новая позиция с позицией яблока
-                self.length += 1  # Увеличиваем длину змейки на 1
-                apple.randomize_position()  # Генерируем новую позицию для яблока
+            if new_pos_head == apple.position:
+                self.length += 1
+                apple.randomize_position()
 
-        
-            
     def reset(self):
+        """Возврат змейки на исходную"""
         self.length = 1
         self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
         screen.fill(BOARD_BACKGROUND_COLOR)
 
-            
     def draw(self):
-
+        """Метод для отрисовки"""
         for position in self.positions:
             # Используйте конструктор pygame.Rect для создания прямоугольника
             rect = pygame.Rect(position[0], position[1], GRID_SIZE, GRID_SIZE)
             pygame.draw.rect(screen, self.body_color, rect)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-
     def get_head_position(self):
+        """Метод возвращает голову змеи"""
         return self.positions[0]
 
 
-
 def handle_keys(game_object):
+    """Обрабатывает нажатия клавиш"""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -142,10 +150,12 @@ def handle_keys(game_object):
                 game_object.next_direction = LEFT
             elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
                 game_object.next_direction = RIGHT
-    
+
 
 def main():
+    """Основная логика игры"""
     # Тут нужно создать экземпляры классов.
+    snake = Snake()
     apple = Apple()
     apple.draw()
     snake = Snake()
@@ -155,21 +165,25 @@ def main():
         clock.tick(SPEED)
 
         # Обработка событий клавиш
-        handle_keys(snake)  
+        handle_keys(snake)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 break
-        
+
         snake.update_direction()
         snake.move(apple)  # Вот здесь должен быть вызов метода move()
+
+        # Проверка на наличие яблока на территории змеи
+        if apple.position in snake.positions:
+            apple.randomize_position()  # Перерисовка яблока
+
         screen.fill(BOARD_BACKGROUND_COLOR)
         snake.draw()
         apple.draw()
         pygame.display.update()
-    
-        pygame.display.update()
+
 
 if __name__ == '__main__':
     main()
