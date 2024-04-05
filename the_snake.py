@@ -14,17 +14,17 @@ DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
-BOARD_BACKGROUND_COLOR = (0, 0, 0)
+BOARD_BACKGROUND_COLOR = pygame.Color(0, 0, 0)
 
-BORDER_COLOR = (93, 216, 228)
+BORDER_COLOR = pygame.Color(93, 216, 228)
 
-APPLE_COLOR = (255, 0, 0)
+APPLE_COLOR = pygame.Color(255, 0, 0)
 
-SNAKE_COLOR = (0, 255, 0)
+SNAKE_COLOR = pygame.Color(0, 255, 0)
 
 SPEED = 20
 
-DIRECTIONS = {
+DRCTN = {
     'up': pygame.K_UP,
     'down': pygame.K_DOWN,
     'left': pygame.K_LEFT,
@@ -47,7 +47,13 @@ class GameObject:
 
     def draw(self):
         """Метод draw"""
-        pass
+        self.draw_cell()
+
+    def draw_cell(self):
+        """Метод для отрисовки"""
+        rect = (pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE)))
+        pygame.draw.rect(screen, self.body_color, rect)
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Apple(GameObject):
@@ -65,10 +71,8 @@ class Apple(GameObject):
         )
 
     def draw(self):
-        """Метод для отрисовки"""
-        rect = (pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE)))
-        pygame.draw.rect(screen, self.body_color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+        """Вызов отрисовки из класса родителя"""
+        super().draw_cell()
 
 
 class Snake(GameObject):
@@ -94,21 +98,13 @@ class Snake(GameObject):
         head = self.get_head_position()
 
         dx, dy = self.direction
-        new_pos_head = (head[0] + dx * GRID_SIZE, head[1] + dy * GRID_SIZE)
-
-        new_pos_head = (
-            new_pos_head[0] % SCREEN_WIDTH, new_pos_head[1] % SCREEN_HEIGHT
+        new_pos_head_x, new_pos_head_y = (
+            head[0] + dx * GRID_SIZE, head[1] + dy * GRID_SIZE
         )
 
-        if new_pos_head in self.positions[2:]:
-            self.reset()
-        else:
-            self.positions.insert(0, new_pos_head)
-            if len(self.positions) > self.length:
-                self.positions.pop()
-            if new_pos_head == apple.position:
-                self.length += 1
-                apple.randomize_position()
+        self.new_pos_head = (
+            new_pos_head_x % SCREEN_WIDTH, new_pos_head_y % SCREEN_HEIGHT
+        )
 
     def reset(self):
         """Возврат змейки на исходную"""
@@ -136,13 +132,13 @@ def handle_keys(game_object):
             pygame.quit()
             raise SystemExit
         elif event.type == pygame.KEYDOWN:
-            if event.key == DIRECTIONS['up'] and game_object.direction != DOWN:
+            if event.key == DRCTN['up'] and game_object.direction != DOWN:
                 game_object.next_direction = UP
-            elif event.key == DIRECTIONS['down'] and game_object.direction != UP:
+            elif event.key == DRCTN['down'] and game_object.direction != UP:
                 game_object.next_direction = DOWN
-            elif event.key == DIRECTIONS['left'] and game_object.direction != RIGHT:
+            elif event.key == DRCTN['left'] and game_object.direction != RIGHT:
                 game_object.next_direction = LEFT
-            elif event.key == DIRECTIONS['right'] and game_object.direction != LEFT:
+            elif event.key == DRCTN['right'] and game_object.direction != LEFT:
                 game_object.next_direction = RIGHT
 
 
@@ -150,7 +146,7 @@ def main():
     """Основная логика игры"""
     snake = Snake()
     apple = Apple()
-    apple.draw()    
+    apple.draw()
     snake.draw()
 
     while True:
@@ -165,6 +161,16 @@ def main():
 
         snake.update_direction()
         snake.move(apple)
+
+        if snake.new_pos_head in snake.positions[2:]:
+            snake.reset()
+        else:
+            snake.positions.insert(0, snake.new_pos_head)
+            if len(snake.positions) > snake.length:
+                snake.positions.pop()
+            if snake.new_pos_head == apple.position:
+                snake.length += 1
+                apple.randomize_position()
 
         if apple.position in snake.positions:
             apple.randomize_position()
