@@ -121,7 +121,7 @@ class Snake(GameObject):
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
     def get_head_position(self):
-        """Метод возвращает голову змеи"""
+        """Метод возвращает голову змейки"""
         return self.positions[0]
 
 
