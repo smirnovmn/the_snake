@@ -8,6 +8,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+SCREEN_CENTER = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
 
 UP = (0, -1)
 DOWN = (0, 1)
@@ -24,11 +25,11 @@ SNAKE_COLOR = pygame.Color(0, 255, 0)
 
 SPEED = 20
 
-DRCTN = {
-    'up': pygame.K_UP,
-    'down': pygame.K_DOWN,
-    'left': pygame.K_LEFT,
-    'right': pygame.K_RIGHT
+SOME_DICT = {
+    pygame.K_UP: UP,
+    pygame.K_DOWN: DOWN,
+    pygame.K_LEFT: LEFT,
+    pygame.K_RIGHT: RIGHT
 }
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -42,16 +43,16 @@ class GameObject:
     """Базовый класс"""
 
     def __init__(self, body_color=None):
-        self.position = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.position = SCREEN_CENTER
         self.body_color = body_color
 
     def draw(self):
-        """Метод draw"""
-        self.draw_cell()
+        """выкидывание NotImplementedError"""
+        raise NotImplementedError
 
     def draw_cell(self):
         """Метод для отрисовки"""
-        rect = (pygame.Rect(self.position, (GRID_SIZE, GRID_SIZE)))
+        rect = pygame.Rect(*self.position, GRID_SIZE, GRID_SIZE)
         pygame.draw.rect(screen, self.body_color, rect)
         pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
@@ -79,13 +80,14 @@ class Snake(GameObject):
     """Класс который отвечает за змейку"""
 
     def __init__(self):
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
-        self.position = self.positions[0]
+        super().__init__(body_color=SNAKE_COLOR)
+        self.position = SCREEN_CENTER[0]
+        self.positions = [self.position]
+        self.direction = choice([UP, DOWN, LEFT, RIGHT])
         self.length = 1
-        self.direction = RIGHT
         self.next_direction = None
-        self.body_color = SNAKE_COLOR
         self.last = None
+        self.last_position_before_death = None
 
     def update_direction(self):
         """Обновление направления"""
@@ -108,17 +110,19 @@ class Snake(GameObject):
 
     def reset(self):
         """Возврат змейки на исходную"""
+        if self.last_position_before_death is not None:
+            position = self.last_position_before_death
+        else:
+            position = SCREEN_CENTER[0]
         self.length = 1
-        self.positions = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+        self.positions = [position]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
-        screen.fill(BOARD_BACKGROUND_COLOR)
 
     def draw(self):
         """Метод для отрисовки"""
         for position in self.positions:
-            rect = pygame.Rect(position[0], position[1], GRID_SIZE, GRID_SIZE)
-            pygame.draw.rect(screen, self.body_color, rect)
-            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+            self.position = position
+            self.draw_cell()
 
     def get_head_position(self):
         """Метод возвращает голову змейки"""
@@ -128,18 +132,15 @@ class Snake(GameObject):
 def handle_keys(game_object):
     """Обрабатывает нажатия клавиш"""
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.KEYDOWN:
+            key = event.key
+            new_dir = SOME_DICT.get(key)
+            current_dir = game_object.direction
+            if new_dir and new_dir != tuple(map(lambda x: -x, current_dir)):
+                game_object.next_direction = new_dir
+        elif event.type == pygame.QUIT:
             pygame.quit()
             raise SystemExit
-        elif event.type == pygame.KEYDOWN:
-            if event.key == DRCTN['up'] and game_object.direction != DOWN:
-                game_object.next_direction = UP
-            elif event.key == DRCTN['down'] and game_object.direction != UP:
-                game_object.next_direction = DOWN
-            elif event.key == DRCTN['left'] and game_object.direction != RIGHT:
-                game_object.next_direction = LEFT
-            elif event.key == DRCTN['right'] and game_object.direction != LEFT:
-                game_object.next_direction = RIGHT
 
 
 def main():
