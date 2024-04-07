@@ -8,7 +8,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
-SCREEN_CENTER = [(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)]
+SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 UP = (0, -1)
 DOWN = (0, 1)
@@ -73,7 +73,7 @@ class Apple(GameObject):
 
     def draw(self):
         """Вызов отрисовки из класса родителя"""
-        super().draw_cell()
+        self.draw_cell()
 
 
 class Snake(GameObject):
@@ -81,7 +81,7 @@ class Snake(GameObject):
 
     def __init__(self):
         super().__init__(body_color=SNAKE_COLOR)
-        self.position = SCREEN_CENTER[0]
+        # self.position = SCREEN_CENTER[0]
         self.positions = [self.position]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
         self.length = 1
@@ -110,10 +110,7 @@ class Snake(GameObject):
 
     def reset(self):
         """Возврат змейки на исходную"""
-        if self.last_position_before_death is not None:
-            position = self.last_position_before_death
-        else:
-            position = SCREEN_CENTER[0]
+        position = self.last_position_before_death or SCREEN_CENTER
         self.length = 1
         self.positions = [position]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
