@@ -25,7 +25,7 @@ SNAKE_COLOR = pygame.Color(0, 255, 0)
 
 SPEED = 20
 
-SOME_DICT = {
+DIRECTION_DICT = {
     pygame.K_UP: UP,
     pygame.K_DOWN: DOWN,
     pygame.K_LEFT: LEFT,
@@ -81,7 +81,6 @@ class Snake(GameObject):
 
     def __init__(self):
         super().__init__(body_color=SNAKE_COLOR)
-        # self.position = SCREEN_CENTER[0]
         self.positions = [self.position]
         self.direction = choice([UP, DOWN, LEFT, RIGHT])
         self.length = 1
@@ -131,7 +130,7 @@ def handle_keys(game_object):
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             key = event.key
-            new_dir = SOME_DICT.get(key)
+            new_dir = DIRECTION_DICT.get(key)
             current_dir = game_object.direction
             if new_dir and new_dir != tuple(map(lambda x: -x, current_dir)):
                 game_object.next_direction = new_dir
